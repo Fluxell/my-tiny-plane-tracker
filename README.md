@@ -43,14 +43,27 @@ This is an Arduino IDE project (no make/cmake).
 ## First-time setup
 
 On first boot (no saved config), the device starts a WiFi access point
-named `TinyPlanes`. Connect to it and open `192.168.4.1` in a browser to
-enter your home WiFi credentials, location (ZIP lookup or lat/lon),
-refresh rate, display range, auto-zoom bounds, and background mode. Saving
-restarts the device straight into normal tracking.
+named `TinyPlanes`. Connect to it, then either scan the QR code shown on the
+display or open `192.168.4.1` in a browser, to enter your home WiFi
+credentials, location (ZIP lookup or lat/lon), refresh rate, display range,
+auto-zoom bounds, and background mode. Saving restarts the device straight
+into normal tracking.
 
-To re-enter the config portal later without re-flashing, hold the left
-button (GPIO5) for 2+ seconds while the tracker is running — see
-[buttons.md](buttons.md).
+Two other ways into the config portal, without re-flashing — see
+[buttons.md](buttons.md) for full detail:
+- Hold the left button (GPIO5) for 2+ seconds while the tracker is running.
+- Press the right button (GPIO13) at any point while the device is trying to
+  connect to WiFi at boot, instead of waiting out the retry timeout.
+
+The QR code is pre-generated at build time (it just encodes the fixed
+`http://192.168.4.1` config-portal address) rather than computed on-device —
+no QR-encoding library dependency. If `AP_IP` in `config.h` is ever changed,
+regenerate the bitmap (`QR_MODULES`/`QR_SIZE` in `setup_server.cpp`) with the
+standard `qrcode` npm package, e.g.:
+```
+npx qrcode -t utf8 --ecLevel L "http://<new AP_IP>"
+```
+then re-pack the resulting module grid into bits (row-major, MSB first).
 
 ## License
 

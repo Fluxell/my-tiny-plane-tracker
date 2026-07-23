@@ -37,6 +37,15 @@ static unsigned long lastFetch = 0;
 
 // ─── WiFi connect ─────────────────────────────────────────────────────────────
 
+// Disconnect STA WiFi and drop straight into the AP config portal, live —
+// never returns. Shared by the GPIO5 runtime hold and a right-button press
+// during the boot-time WiFi connect attempt below.
+static void enterSetupModeLive() {
+    WiFi.disconnect(true);
+    delay(200);
+    startSetupServer();
+}
+
 static bool connectWiFi(const AppConfig& c) {
     WiFi.persistent(false);
     WiFi.disconnect(true);
@@ -51,6 +60,13 @@ static bool connectWiFi(const AppConfig& c) {
             Serial.printf(" OK  IP %s\n", WiFi.localIP().toString().c_str());
             delay(1000);
             return true;
+        }
+        if (digitalRead(RANGE_BUTTON_INC_PIN) == LOW) {
+            delay(DEBOUNCE_MS);  // cheap debounce given this project's known EMI sensitivity
+            if (digitalRead(RANGE_BUTTON_INC_PIN) == LOW) {
+                Serial.println("\n[main] right button pressed during WiFi connect -> entering config mode");
+                enterSetupModeLive();  // never returns
+            }
         }
         delay(500);
         Serial.print(".");
@@ -279,13 +295,10 @@ static void onIncHold() {
 }
 
 // GPIO5 held BUTTON_HOLD_MS -> drop the running tracker into the AP config
-// portal without rebooting. Mirrors connectWiFi()'s disconnect pattern for a
-// clean STA->AP transition; startSetupServer() never returns.
+// portal without rebooting (see enterSetupModeLive() above).
 static void onDecHold() {
     Serial.println("[main] GPIO5 held -> entering config mode");
-    WiFi.disconnect(true);
-    delay(200);
-    startSetupServer();
+    enterSetupModeLive();
 }
 
 // Both buttons held together BUTTON_HOLD_MS -> toggle auto-zoom. Persists
