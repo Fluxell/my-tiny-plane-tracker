@@ -96,6 +96,8 @@ static const char SETUP_HTML[] PROGMEM = R"HTML(
   .radio-group { display: flex; gap: 20px; margin-bottom: 4px; }
   .radio-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
   .radio-group input[type=radio] { width: auto; }
+  .check-label { display: flex; align-items: center; gap: 6px; cursor: pointer; margin-bottom: 4px; }
+  .check-label input[type=checkbox] { width: auto; }
   .submit {
     width: 100%; padding: 11px; background: #0284c7; border: none; border-radius: 8px;
     color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer;
@@ -224,6 +226,23 @@ static const char SETUP_HTML[] PROGMEM = R"HTML(
     </div>
   </section>
 
+  <hr>
+
+  <section>
+    <h2>Aircraft Info</h2>
+    <div class="field">
+      <label class="check-label"><input type="checkbox" id="show_callsign" checked> Show callsign</label>
+      <label class="check-label"><input type="checkbox" id="show_model" onchange="toggleModelFormat()"> Show model</label>
+    </div>
+    <div id="modelFormatDiv" style="display:none">
+      <div class="radio-group">
+        <label><input type="radio" name="model_format" value="0" checked> Code (e.g. B738)</label>
+        <label><input type="radio" name="model_format" value="1"> Full name (e.g. Boeing 737-800)</label>
+      </div>
+      <p class="hint">Full name uses a built-in lookup table — uncommon types fall back to the code.</p>
+    </div>
+  </section>
+
   <button class="submit" onclick="save()">Save &amp; Start Tracker</button>
 </div>
 
@@ -236,6 +255,11 @@ function toggleStadia() {
 function toggleAutoZoom() {
   const on = document.querySelector('[name=auto_zoom]:checked').value === '1';
   document.getElementById('autoZoomSettings').style.display = on ? 'block' : 'none';
+}
+
+function toggleModelFormat() {
+  const on = document.getElementById('show_model').checked;
+  document.getElementById('modelFormatDiv').style.display = on ? 'block' : 'none';
 }
 
 function lookupZip() {
@@ -271,6 +295,13 @@ function save() {
     return;
   }
 
+  const showCallsign = document.getElementById('show_callsign').checked;
+  const showModel    = document.getElementById('show_model').checked;
+  if (!showCallsign && !showModel) {
+    alert('Please enable at least one of Show callsign or Show model.');
+    return;
+  }
+
   const f = document.createElement('form');
   f.method = 'POST'; f.action = '/save';
   const data = {
@@ -286,7 +317,10 @@ function save() {
     min_range_mi: document.getElementById('min_range_mi').value,
     max_range_mi: document.getElementById('max_range_mi').value,
     min_planes:   document.getElementById('min_planes').value,
-    max_planes:   document.getElementById('max_planes').value
+    max_planes:   document.getElementById('max_planes').value,
+    show_callsign: showCallsign ? '1' : '0',
+    show_model:    showModel ? '1' : '0',
+    model_format:  document.querySelector('[name=model_format]:checked').value
   };
   for (const [k, v] of Object.entries(data)) {
     const i = document.createElement('input');
@@ -325,6 +359,14 @@ async function loadSaved() {
       toggleStadia();
     }
     if (d.stadia_key)          document.getElementById('stadia_key').value = d.stadia_key;
+    if (d.show_callsign != null) document.getElementById('show_callsign').checked = (String(d.show_callsign) === '1');
+    if (d.show_model    != null) document.getElementById('show_model').checked    = (String(d.show_model) === '1');
+    if (d.model_format   != null) {
+      document.querySelectorAll('[name=model_format]').forEach(r => {
+        r.checked = (r.value === String(d.model_format));
+      });
+    }
+    toggleModelFormat();
   } catch(e) {}
 }
 document.addEventListener('DOMContentLoaded', loadSaved);
@@ -421,7 +463,10 @@ static void handleConfig() {
     json += "\"min_range_mi\":" + String(saved.minRangeMiles)    + ",";
     json += "\"max_range_mi\":" + String(saved.maxRangeMiles)    + ",";
     json += "\"min_planes\":"   + String(saved.minPlanesInView)  + ",";
-    json += "\"max_planes\":"   + String(saved.maxPlanesInView);
+    json += "\"max_planes\":"   + String(saved.maxPlanesInView)  + ",";
+    json += "\"show_callsign\":" + String(saved.showCallsign ? 1 : 0) + ",";
+    json += "\"show_model\":"    + String(saved.showModel ? 1 : 0)    + ",";
+    json += "\"model_format\":"  + String(saved.modelFormat);
     json += "}";
     server.send(200, "application/json", json);
 }
@@ -451,6 +496,9 @@ static void handleSave() {
                                     cfg.minRangeMiles, cfg.maxRangeMiles);
     cfg.bgMode = (uint8_t)constrain(server.arg("bg_mode").toInt(), 0, 1);
     server.arg("stadia_key").toCharArray(cfg.stadiaKey, sizeof(cfg.stadiaKey));
+    cfg.showCallsign = server.arg("show_callsign").toInt() != 0;
+    cfg.showModel    = server.arg("show_model").toInt() != 0;
+    cfg.modelFormat  = (uint8_t)constrain(server.arg("model_format").toInt(), 0, 1);
 
     saveConfig(cfg);
     server.send_P(200, "text/html", SAVED_HTML);

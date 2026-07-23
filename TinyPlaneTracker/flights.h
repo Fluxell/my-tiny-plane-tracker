@@ -3,6 +3,7 @@
 
 struct PlaneState {
     char  callsign[8];   // max 7 chars + null, trailing spaces stripped
+    char  typeCode[8];   // ICAO type designator, e.g. "B738"; empty if unavailable
     float lat;
     float lon;
     float track;         // degrees, 0 = North, clockwise

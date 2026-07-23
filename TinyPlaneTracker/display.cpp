@@ -1,5 +1,6 @@
 #include "display.h"
 #include "config.h"
+#include "type_names.h"
 #include <TFT_eSPI.h>
 #include <WiFiClientSecure.h>
 #include <HTTPClient.h>
@@ -286,7 +287,24 @@ void drawPlanes(const AppConfig& cfg, const PlaneState* planes, int count,
         if (!latLonToPixel(planes[i].lat, planes[i].lon, cfg, px, py)) continue;
         float track = planes[i].track;
         drawPlaneTriangle(px, py, track, TFT_YELLOW);
-        tft.drawString(planes[i].callsign, px, py + 8, 1);  // Font 1 = 5×7 px
+
+        int lineY = py + 8;  // Font 1 = 5×7 px
+        if (cfg.showCallsign) {
+            tft.drawString(planes[i].callsign, px, lineY, 1);
+            lineY += 8;
+        }
+        if (cfg.showModel) {
+            const char* text;
+            if (planes[i].typeCode[0] == '\0') {
+                text = "?";
+            } else if (cfg.modelFormat == MODEL_FMT_NAME) {
+                const char* name = lookupTypeName(planes[i].typeCode);
+                text = name ? name : planes[i].typeCode;  // fall back to the raw code
+            } else {
+                text = planes[i].typeCode;
+            }
+            tft.drawString(text, px, lineY, 1);
+        }
     }
 
     // Range label — bottom of circle; "(a)" suffix + blue when auto-zoom is

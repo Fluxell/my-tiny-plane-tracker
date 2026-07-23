@@ -1,8 +1,8 @@
 # my-tiny-plane-tracker
 
 Show nearby aircraft on a tiny round display. An ESP32-S3 fetches live flight
-data for your location and renders it as directional triangles + callsigns
-on a 1.28" circular LCD.
+data for your location and renders it as directional triangles + callsign
+and/or aircraft model labels on a 1.28" circular LCD.
 
 ## Hardware
 
@@ -14,7 +14,10 @@ on a 1.28" circular LCD.
 ## Features
 
 - Nearby aircraft pulled from [ADSB.fi](https://adsb.fi) and drawn as
-  triangles (pointing along their track) with callsigns
+  triangles (pointing along their track), with configurable info labels:
+  callsign, aircraft model, or both. Model can show the short ICAO type
+  code (e.g. "B738") or a full name (e.g. "Boeing 737-800") via a built-in
+  lookup table (unrecognized codes fall back to the raw code)
 - Background: plain dark rings, or live Stadia Maps tiles centered on your
   location
 - Auto-zoom: automatically expands/shrinks the display range to keep a
@@ -46,8 +49,8 @@ On first boot (no saved config), the device starts a WiFi access point
 named `TinyPlanes`. Connect to it, then either scan the QR code shown on the
 display or open `192.168.4.1` in a browser, to enter your home WiFi
 credentials, location (ZIP lookup or lat/lon), refresh rate, display range,
-auto-zoom bounds, and background mode. Saving restarts the device straight
-into normal tracking.
+auto-zoom bounds, background mode, and aircraft info labels (callsign,
+model, or both). Saving restarts the device straight into normal tracking.
 
 Two other ways into the config portal, without re-flashing — see
 [buttons.md](buttons.md) for full detail:

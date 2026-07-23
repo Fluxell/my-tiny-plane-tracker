@@ -21,6 +21,9 @@ bool loadConfig(AppConfig& cfg) {
         cfg.minPlanesInView = prefs.getInt("min_planes",   PLANES_MIN_DEFAULT);
         cfg.maxPlanesInView = prefs.getInt("max_planes",   PLANES_MAX_DEFAULT);
         cfg.autoZoom        = prefs.getInt("auto_zoom",    AUTOZOOM_DEFAULT) != 0;
+        cfg.showCallsign    = prefs.getInt("show_callsign", 1) != 0;
+        cfg.showModel       = prefs.getInt("show_model",    0) != 0;
+        cfg.modelFormat     = (uint8_t)prefs.getInt("model_fmt", MODEL_FMT_CODE);
     }
 
     prefs.end();
@@ -43,6 +46,9 @@ void saveConfig(const AppConfig& cfg) {
     prefs.putInt("min_planes",    cfg.minPlanesInView);
     prefs.putInt("max_planes",    cfg.maxPlanesInView);
     prefs.putInt("auto_zoom",     cfg.autoZoom ? 1 : 0);
+    prefs.putInt("show_callsign", cfg.showCallsign ? 1 : 0);
+    prefs.putInt("show_model",    cfg.showModel ? 1 : 0);
+    prefs.putInt("model_fmt",     (int)cfg.modelFormat);
     prefs.end();
 }
 

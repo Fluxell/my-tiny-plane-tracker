@@ -69,6 +69,7 @@ int fetchFlights(const AppConfig& cfg, PlaneState* out, int maxCount) {
     StaticJsonDocument<200> filter;
     JsonObject f = filter.createNestedArray("ac").createNestedObject();
     f["flight"] = true;
+    f["t"]      = true;
     f["lat"]    = true;
     f["lon"]    = true;
     f["track"]  = true;
@@ -101,6 +102,10 @@ int fetchFlights(const AppConfig& cfg, PlaneState* out, int maxCount) {
 
         // Skip entries with no callsign
         if (out[count].callsign[0] == '\0') continue;
+
+        const char* t = p["t"] | "";
+        strncpy(out[count].typeCode, t, 7);
+        out[count].typeCode[7] = '\0';
 
         out[count].lat   = p["lat"]   | 0.0f;
         out[count].lon   = p["lon"]   | 0.0f;

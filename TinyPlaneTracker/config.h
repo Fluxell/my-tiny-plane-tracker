@@ -26,6 +26,10 @@
 #define BG_DARK         0
 #define BG_MAP          1
 
+// ─── Aircraft info display ─────────────────────────────────────────────────────
+#define MODEL_FMT_CODE  0   // e.g. "B738"
+#define MODEL_FMT_NAME  1   // e.g. "Boeing 737-800" (via type_names.h lookup)
+
 // ─── Flight data ──────────────────────────────────────────────────────────────
 #define MAX_PLANES      60   // persistent display list — never shrinks mid-session
 #define FETCH_BUF       80   // intermediate fetch buffer per API call

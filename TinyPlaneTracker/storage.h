@@ -15,6 +15,9 @@ struct AppConfig {
     int     minPlanesInView;  // expand range when fewer planes visible, default 1
     int     maxPlanesInView;  // shrink range when more planes visible, default 20
     bool    autoZoom;         // enable dynamic range adjustment, default true
+    bool    showCallsign;     // show callsign label under each plane, default true
+    bool    showModel;        // show aircraft model label under each plane, default false
+    uint8_t modelFormat;      // MODEL_FMT_CODE or MODEL_FMT_NAME, default MODEL_FMT_CODE
 };
 
 // Returns true if valid config was found in NVS
