@@ -21,6 +21,17 @@ press — holding both together will never also restart the device or enter
 config mode. Tapping either button afterward still force-disables auto-zoom
 as usual; the combined hold is the only way to turn it back on.
 
+## Boot-time only: Right button during WiFi connect
+
+This is a separate, boot-phase-only behavior — distinct from the Right
+button's normal runtime tap/hold above, which only applies once the tracker
+is running (`loop()`). While `connectWiFi()` is retrying the home WiFi
+connection at boot (before the display/tracker start), pressing the Right
+button (GPIO13) at any point — a single press, no hold required — aborts the
+connection attempt immediately and enters config mode live (same
+`enterSetupModeLive()` used by the Left-hold above), instead of waiting out
+the ~20s retry window and rebooting into "WiFi failed".
+
 ## Display indicator
 
 The range label at the bottom of the screen shows `"N mi (a)"` in blue when
@@ -39,5 +50,8 @@ auto-zoom is on, or `"N mi"` in dim gray when off.
   - `onIncTap()` / `onDecTap()` — tap actions (call `adjustRange()`)
   - `onIncHold()` / `onDecHold()` — solo hold actions
   - `onComboHold()` — combined hold action (toggles `cfg.autoZoom`)
+  - `enterSetupModeLive()` — shared helper (disconnect STA WiFi, start the AP portal live, never returns); used by `onDecHold()` and the boot-time Right-button check inside `connectWiFi()`
 - Display — `TinyPlaneTracker/display.cpp`:
   - `drawPlanes()` — renders the range label with the `(a)` suffix/color
+- Setup portal screen — `TinyPlaneTracker/setup_server.cpp`:
+  - `showSetupScreen()` — shown on every config-mode entry point (no saved config, Left-hold, Right-button-during-connect); includes a pre-generated QR code (`QR_MODULES`/`drawQRCode()`) encoding `http://` + `AP_IP`, so scanning it after joining the `AP_SSID` WiFi network jumps straight to the config page

@@ -9,6 +9,43 @@ extern TFT_eSPI tft;
 
 static WebServer server(80);
 
+// ─── Pre-generated QR code ─────────────────────────────────────────────────────
+// Encodes "http://" AP_IP (config.h) — regenerate only if AP_IP changes.
+// Generated once via the standard `qrcode` npm package (ISO/IEC 18004,
+// version 1, ECC_LOW) and round-trip verified with an independent decoder
+// (jsQR). Packed 1 bit/module, row-major, MSB first — see qrModuleAt().
+static const uint8_t QR_SIZE = 21;
+static const uint8_t QR_MODULES[] = {
+    0xfe, 0x4b, 0xfc, 0x16, 0x90, 0x6e, 0x92, 0xbb, 0x75, 0x85, 0xdb, 0xa3,
+    0xae, 0xc1, 0x79, 0x07, 0xfa, 0xaf, 0xe0, 0x07, 0x00, 0xfb, 0xd5, 0x55,
+    0x40, 0x47, 0xf8, 0xd4, 0xac, 0x1b, 0x81, 0xc7, 0xbb, 0x04, 0x80, 0x72,
+    0xf7, 0xfb, 0x6a, 0xd0, 0x4b, 0x9c, 0xba, 0x8c, 0x55, 0xd4, 0xf5, 0x2e,
+    0xa1, 0x89, 0x05, 0x36, 0x4f, 0xee, 0xf1, 0x00,
+};
+
+static bool qrModuleAt(uint8_t x, uint8_t y) {
+    uint16_t bit = (uint16_t)y * QR_SIZE + x;
+    return (QR_MODULES[bit / 8] >> (7 - (bit % 8))) & 1;
+}
+
+// Blits the pre-generated QR code centered at (centerX, centerY), moduleScale
+// pixels per module. White quiet-zone border is drawn first; background
+// already covers "off" modules so only dark ones need drawing.
+static void drawQRCode(int centerX, int centerY, int moduleScale) {
+    int qrPixelSize = QR_SIZE * moduleScale;
+    int startX = centerX - qrPixelSize / 2;
+    int startY = centerY - qrPixelSize / 2;
+
+    tft.fillRect(startX - moduleScale, startY - moduleScale,
+                 qrPixelSize + moduleScale * 2, qrPixelSize + moduleScale * 2, TFT_WHITE);
+
+    for (uint8_t y = 0; y < QR_SIZE; y++)
+        for (uint8_t x = 0; x < QR_SIZE; x++)
+            if (qrModuleAt(x, y))
+                tft.fillRect(startX + x * moduleScale, startY + y * moduleScale,
+                             moduleScale, moduleScale, TFT_BLACK);
+}
+
 // ─── HTML pages stored in flash ───────────────────────────────────────────────
 
 static const char SETUP_HTML[] PROGMEM = R"HTML(
@@ -342,14 +379,9 @@ static void showSetupScreen() {
     tft.setRotation(0);
     tft.fillScreen(TFT_BLACK);
 
-    const uint16_t wifiColor = tft.color565(56, 189, 248);  // #38bdf8
-    const int cx   = DISPLAY_WIDTH / 2;
-    const int dotY = 130;
+    const int cx = DISPLAY_WIDTH / 2;
 
-    tft.drawArc(cx, dotY, 75, 69, 305, 55, wifiColor, TFT_BLACK);
-    tft.drawArc(cx, dotY, 52, 46, 305, 55, wifiColor, TFT_BLACK);
-    tft.drawArc(cx, dotY, 29, 23, 305, 55, wifiColor, TFT_BLACK);
-    tft.fillCircle(cx, dotY, 8, wifiColor);
+    drawQRCode(cx, 110, 4);  // "http://" AP_IP — scan after joining AP_SSID
 
     tft.setTextDatum(MC_DATUM);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
