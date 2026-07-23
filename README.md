@@ -4,6 +4,9 @@ Show nearby aircraft on a tiny round display. An ESP32-S3 fetches live flight
 data for your location and renders it as directional triangles + callsign
 and/or aircraft model labels on a 1.28" circular LCD.
 
+This is a personal hobby project built with the help of Claude — just
+something fun to tinker with, not a polished or supported product.
+
 ## Hardware
 
 - ESP32-S3 + Waveshare 1.28" round 240×240 GC9A01 display
